@@ -1,6 +1,6 @@
 # AI Content Pipeline
 
-A fully automated, research-backed SEO content pipeline. Add a topic to a Google Sheet; a finished draft appears in Notion five minutes later and Slack tells you it's ready.
+A fully automated, research-backed SEO content pipeline. Add a topic to a Google Sheet; a finished draft appears in Notion five minutes later, and the sheet row updates itself with the link.
 
 Built with **n8n** — no backend, no database, no frontend, no deployment.
 
@@ -42,7 +42,6 @@ flowchart LR
     C --> D["Claude<br/>write 1,200 words<br/>+ SEO meta"]
     D --> E["Notion<br/>create draft page"]
     E --> F["Google Sheet<br/>write back url + status"]
-    F --> G["Slack<br/>notify team"]
 ```
 
 The human does two things: **add a topic**, and **review the draft**. The machine does everything in between.
@@ -71,7 +70,6 @@ An LLM alone writes from training data. This pipeline reads **what is actually r
 | Research | **Firecrawl** | Search + scrape in one call; returns clean markdown, not raw HTML |
 | Analysis + writing | **Claude API** (`claude-opus-5`) | Gap analysis and long-form drafting in two separate, focused calls |
 | Draft destination | **Notion API** | Free, reviewable, commentable. Publishing target is swappable. |
-| Notification | **Slack incoming webhook** | One POST, no OAuth app to build |
 
 **Total cost to run: ~$0.25 per article** (Anthropic tokens). Everything else is free tier.
 

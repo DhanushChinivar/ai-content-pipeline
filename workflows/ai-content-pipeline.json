@@ -13,21 +13,28 @@
         "documentId": {
           "__rl": true,
           "value": "1-p5W-cZpFf6SAq3mmH10pFZkcug1K9vJ1Cjo0p2f3Vw",
-          "mode": "id"
+          "mode": "list",
+          "cachedResultName": "AI Content Pipeline",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-p5W-cZpFf6SAq3mmH10pFZkcug1K9vJ1Cjo0p2f3Vw/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
-          "mode": "id"
+          "value": 1107022495,
+          "mode": "list",
+          "cachedResultName": "Untitled",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-p5W-cZpFf6SAq3mmH10pFZkcug1K9vJ1Cjo0p2f3Vw/edit#gid=1107022495"
         },
         "event": "rowAdded",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000001",
-      "name": "Google Sheets Trigger",
       "type": "n8n-nodes-base.googleSheetsTrigger",
       "typeVersion": 1,
-      "position": [-220, 0]
+      "position": [
+        0,
+        0
+      ],
+      "id": "e9d83c5d-de7c-4885-89ad-fce08bb15fa3",
+      "name": "Google Sheets Trigger"
     },
     {
       "parameters": {
@@ -37,24 +44,30 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"{{ $json.topic }}\",\n  \"limit\": 5,\n  \"scrapeOptions\": { \"formats\": [{ \"type\": \"markdown\" }] }\n}",
+        "jsonBody": "={\n  \"query\": \"{{ $json.topic }}\",\n  \"limit\": 5,\n  \"scrapeOptions\": { \"formats\": [{ \"type\": \"markdown\" }] }\n}\n",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000002",
-      "name": "Firecrawl Search",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [0, 0]
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "3f88cb08-7788-4eb2-b430-635f7d8ea2d6",
+      "name": "Firecrawl Search"
     },
     {
       "parameters": {
         "jsCode": "const results = $input.first().json.data.web || [];\n\nconst scraped = results.filter(r => r.markdown);\n\nconst competitor_markdown = scraped\n  .map(r => `## ${r.title}\\n(${r.url})\\n\\n${r.markdown.slice(0, 4000)}`)\n  .join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    topic: $('Google Sheets Trigger').first().json.topic,\n    competitor_count: scraped.length,\n    competitor_markdown,\n  }\n}];"
       },
-      "id": "a1000000-0000-4000-8000-000000000003",
-      "name": "Flatten Competitors",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 0]
+      "position": [
+        448,
+        0
+      ],
+      "id": "ebfb22fd-ae43-4a79-ad1d-2f72ce46dc43",
+      "name": "Flatten Competitors"
     },
     {
       "parameters": {
@@ -73,24 +86,30 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-opus-5\",\n  \"max_tokens\": 8000,\n  \"system\": \"You are an SEO content strategist. You are given the full text of the articles currently ranking on page one for a target keyword. Your job is to find the openings they leave and turn them into an outline for a better article. Be specific and evidence-based. Every gap you name must be traceable to what the competitor articles actually do or don't say. If the competitors genuinely cover the topic well, say so plainly rather than inventing weaknesses.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"TARGET KEYWORD: \" + $json.topic + \"\\n\\nCOMPETITOR ARTICLES CURRENTLY RANKING:\\n\\n\" + $json.competitor_markdown + \"\\n\\n---\\n\\nAnalyse these and produce an outline that would outrank them.\") }}\n    }\n  ],\n  \"output_config\": {\n    \"format\": {\n      \"type\": \"json_schema\",\n      \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"competitor_summary\": { \"type\": \"string\" },\n          \"common_angle\": { \"type\": \"string\" },\n          \"gaps\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"gap\": { \"type\": \"string\" },\n                \"evidence\": { \"type\": \"string\" }\n              },\n              \"required\": [\"gap\", \"evidence\"],\n              \"additionalProperties\": false\n            }\n          },\n          \"unanswered_questions\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n          \"recommended_angle\": { \"type\": \"string\" },\n          \"outline\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"heading\": { \"type\": \"string\" },\n                \"covers\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n                \"fills_gap\": { \"type\": \"string\" }\n              },\n              \"required\": [\"heading\", \"covers\", \"fills_gap\"],\n              \"additionalProperties\": false\n            }\n          }\n        },\n        \"required\": [\"competitor_summary\", \"common_angle\", \"gaps\", \"unanswered_questions\", \"recommended_angle\", \"outline\"],\n        \"additionalProperties\": false\n      }\n    }\n  }\n}",
+        "jsonBody": "={\n  \"model\": \"claude-opus-5\",\n  \"max_tokens\": 16000,\n  \"system\": \"You are an SEO content strategist. You are given the full text of the articles currently ranking on page one for a target keyword. Your job is to find the openings they leave and turn them into an outline for a better article. Be specific and evidence-based. Every gap you name must be traceable to what the competitor articles actually do or don't say. If the competitors genuinely cover the topic well, say so plainly rather than inventing weaknesses.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"TARGET KEYWORD: \" + $json.topic + \"\\n\\nCOMPETITOR ARTICLES CURRENTLY RANKING:\\n\\n\" + $json.competitor_markdown + \"\\n\\n---\\n\\nAnalyse these and produce an outline that would outrank them.\") }}\n    }\n  ],\n  \"output_config\": {\n    \"format\": {\n      \"type\": \"json_schema\",\n      \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"competitor_summary\": { \"type\": \"string\" },\n          \"common_angle\": { \"type\": \"string\" },\n          \"gaps\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"gap\": { \"type\": \"string\" },\n                \"evidence\": { \"type\": \"string\" }\n              },\n              \"required\": [\"gap\", \"evidence\"],\n              \"additionalProperties\": false\n            }\n          },\n          \"unanswered_questions\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n          \"recommended_angle\": { \"type\": \"string\" },\n          \"outline\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"heading\": { \"type\": \"string\" },\n                \"covers\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n                \"fills_gap\": { \"type\": \"string\" }\n              },\n              \"required\": [\"heading\", \"covers\", \"fills_gap\"],\n              \"additionalProperties\": false\n            }\n          }\n        },\n        \"required\": [\"competitor_summary\", \"common_angle\", \"gaps\", \"unanswered_questions\", \"recommended_angle\", \"outline\"],\n        \"additionalProperties\": false\n      }\n    }\n  }\n}",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000004",
+      "id": "d6361a9e-fbe8-45c4-8dbf-dc5fe438c587",
       "name": "Claude Gap Analysis",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [440, 0]
+      "position": [
+        256,
+        224
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Claude returns the JSON as a *string* inside content[0].text — parse it.\nconst raw = $input.first().json.content[0].text;\nconst analysis = JSON.parse(raw);\n\nreturn [{\n  json: {\n    topic: $('Flatten Competitors').first().json.topic,\n    competitor_count: $('Flatten Competitors').first().json.competitor_count,\n    analysis,\n  }\n}];"
+        "jsCode": "// claude-opus-5 has extended thinking on, so content[0] is a *thinking* block.\n// Find the text block by type instead of assuming index 0.\nconst res = $input.first().json;\nconst content = res.content || [];\nconst textBlock = content.find(b => b.type === 'text');\nif (!textBlock) {\n  throw new Error('No text block in Claude response \u2014 got: ' + content.map(b => b.type).join(', '));\n}\n// A truncated response leaves invalid JSON. Say so plainly: otherwise this\n// surfaces three lines down as \"Unterminated string in JSON at position N\".\nif (res.stop_reason === 'max_tokens') {\n  throw new Error('Claude hit max_tokens and the JSON is cut off. Raise max_tokens on the previous node. Output so far: ' + textBlock.text.length + ' chars.');\n}\n\n// The analysis JSON arrives as a *string* \u2014 parse it.\nconst analysis = JSON.parse(textBlock.text);\n\nreturn [{\n  json: {\n    topic: $('Flatten Competitors').first().json.topic,\n    competitor_count: $('Flatten Competitors').first().json.competitor_count,\n    analysis,\n  }\n}];"
       },
-      "id": "a1000000-0000-4000-8000-000000000005",
+      "id": "4ceac416-ec06-42a6-a391-beb4451c42de",
       "name": "Parse Gap Analysis",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, 0]
+      "position": [
+        480,
+        224
+      ]
     },
     {
       "parameters": {
@@ -109,24 +128,30 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-opus-5\",\n  \"max_tokens\": 16000,\n  \"system\": \"You are a content writer producing a publish-ready article for a company blog. You are given a research brief: what the currently-ranking articles cover, what they miss, and an outline built to fill those gaps. Follow the outline. The sections marked as filling a gap are the reason this article exists — give them real depth, not a paragraph of acknowledgement. Write like a knowledgeable person explaining something they actually understand. Concrete over abstract: specific numbers, named tradeoffs, real scenarios. If you don't know a fact, write around it rather than inventing it — no fabricated statistics, prices, study citations, or product specifications. Avoid the register that makes writing read as machine-generated: no 'in today's fast-paced world', no 'it's important to note that', no section that only restates the section above it, no closing paragraph that summarises what the reader just read. Output the body as Markdown using only these four constructs: '## Section heading', '### Subsection heading', '- Bullet point', and plain paragraph text. No H1, no tables, no code blocks, no images, no links, no bold or italic markers. Separate every block with a blank line.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"TARGET KEYWORD: \" + $json.topic + \"\\n\\nRESEARCH BRIEF:\\n\" + JSON.stringify($json.analysis) + \"\\n\\n---\\n\\nWrite the article. Target roughly 1,200 words.\") }}\n    }\n  ],\n  \"output_config\": {\n    \"format\": {\n      \"type\": \"json_schema\",\n      \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": { \"type\": \"string\" },\n          \"meta_title\": { \"type\": \"string\" },\n          \"meta_description\": { \"type\": \"string\" },\n          \"body_markdown\": { \"type\": \"string\" },\n          \"tags\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n          \"gaps_addressed\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } }\n        },\n        \"required\": [\"title\", \"meta_title\", \"meta_description\", \"body_markdown\", \"tags\", \"gaps_addressed\"],\n        \"additionalProperties\": false\n      }\n    }\n  }\n}",
+        "jsonBody": "={\n  \"model\": \"claude-opus-5\",\n  \"max_tokens\": 16000,\n  \"system\": \"You are a content writer producing a publish-ready article for a company blog. You are given a research brief: what the currently-ranking articles cover, what they miss, and an outline built to fill those gaps. Follow the outline. The sections marked as filling a gap are the reason this article exists \u2014 give them real depth, not a paragraph of acknowledgement. Write like a knowledgeable person explaining something they actually understand. Concrete over abstract: specific numbers, named tradeoffs, real scenarios. If you don't know a fact, write around it rather than inventing it \u2014 no fabricated statistics, prices, study citations, or product specifications. Avoid the register that makes writing read as machine-generated: no 'in today's fast-paced world', no 'it's important to note that', no section that only restates the section above it, no closing paragraph that summarises what the reader just read. Output the body as Markdown using only these four constructs: '## Section heading', '### Subsection heading', '- Bullet point', and plain paragraph text. No H1, no tables, no code blocks, no images, no links, no bold or italic markers. Separate every block with a blank line.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"TARGET KEYWORD: \" + $json.topic + \"\\n\\nRESEARCH BRIEF:\\n\" + JSON.stringify($json.analysis) + \"\\n\\n---\\n\\nWrite the article. Target roughly 1,200 words.\") }}\n    }\n  ],\n  \"output_config\": {\n    \"format\": {\n      \"type\": \"json_schema\",\n      \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": { \"type\": \"string\" },\n          \"meta_title\": { \"type\": \"string\" },\n          \"meta_description\": { \"type\": \"string\" },\n          \"body_markdown\": { \"type\": \"string\" },\n          \"tags\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n          \"gaps_addressed\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } }\n        },\n        \"required\": [\"title\", \"meta_title\", \"meta_description\", \"body_markdown\", \"tags\", \"gaps_addressed\"],\n        \"additionalProperties\": false\n      }\n    }\n  }\n}",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000006",
+      "id": "29e1b6ac-27fe-4227-b634-7e1cf20c224d",
       "name": "Claude Write Article",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [880, 0]
+      "position": [
+        704,
+        224
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Parse the article, then convert its markdown into Notion block objects.\nconst article = JSON.parse($input.first().json.content[0].text);\n\nconst rt = (t) => [{ type: 'text', text: { content: t.slice(0, 2000) } }];\n\nconst blocks = article.body_markdown\n  .split('\\n')\n  .map(l => l.trim())\n  .filter(Boolean)\n  .map(line => {\n    if (line.startsWith('### ')) {\n      return { object: 'block', type: 'heading_3', heading_3: { rich_text: rt(line.slice(4)) } };\n    }\n    if (line.startsWith('## ')) {\n      return { object: 'block', type: 'heading_2', heading_2: { rich_text: rt(line.slice(3)) } };\n    }\n    if (line.startsWith('- ')) {\n      return { object: 'block', type: 'bulleted_list_item', bulleted_list_item: { rich_text: rt(line.slice(2)) } };\n    }\n    return { object: 'block', type: 'paragraph', paragraph: { rich_text: rt(line) } };\n  })\n  .slice(0, 100); // Notion rejects more than 100 children per create call\n\nreturn [{\n  json: {\n    topic: $('Parse Gap Analysis').first().json.topic,\n    title: article.title,\n    meta_description: article.meta_description,\n    tags: article.tags,\n    gaps_addressed: article.gaps_addressed,\n    blocks,\n  }\n}];"
+        "jsCode": "// claude-opus-5 has extended thinking on, so content[0] is a *thinking* block.\n// Find the text block by type instead of assuming index 0.\nconst res = $input.first().json;\nconst content = res.content || [];\nconst textBlock = content.find(b => b.type === 'text');\nif (!textBlock) {\n  throw new Error('No text block in Claude response \u2014 got: ' + content.map(b => b.type).join(', '));\n}\n// A truncated response leaves invalid JSON. Say so plainly: otherwise this\n// surfaces three lines down as \"Unterminated string in JSON at position N\".\nif (res.stop_reason === 'max_tokens') {\n  throw new Error('Claude hit max_tokens and the JSON is cut off. Raise max_tokens on the previous node. Output so far: ' + textBlock.text.length + ' chars.');\n}\n\n// Parse the article, then convert its markdown into Notion block objects.\nconst article = JSON.parse(textBlock.text);\n\nconst rt = (t) => [{ type: 'text', text: { content: t.slice(0, 2000) } }];\n\nconst blocks = article.body_markdown\n  .split('\\n')\n  .map(l => l.trim())\n  .filter(Boolean)\n  .map(line => {\n    if (line.startsWith('### ')) {\n      return { object: 'block', type: 'heading_3', heading_3: { rich_text: rt(line.slice(4)) } };\n    }\n    if (line.startsWith('## ')) {\n      return { object: 'block', type: 'heading_2', heading_2: { rich_text: rt(line.slice(3)) } };\n    }\n    if (line.startsWith('- ')) {\n      return { object: 'block', type: 'bulleted_list_item', bulleted_list_item: { rich_text: rt(line.slice(2)) } };\n    }\n    return { object: 'block', type: 'paragraph', paragraph: { rich_text: rt(line) } };\n  })\n  .slice(0, 100); // Notion rejects more than 100 children per create call\n\nreturn [{\n  json: {\n    topic: $('Parse Gap Analysis').first().json.topic,\n    title: article.title,\n    meta_description: article.meta_description,\n    tags: article.tags,\n    gaps_addressed: article.gaps_addressed,\n    blocks,\n  }\n}];"
       },
-      "id": "a1000000-0000-4000-8000-000000000007",
+      "id": "cec21161-a710-4dab-ae36-2ab9a837cee5",
       "name": "Markdown To Notion Blocks",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, 0]
+      "position": [
+        928,
+        224
+      ]
     },
     {
       "parameters": {
@@ -148,11 +173,49 @@
         "jsonBody": "={{ JSON.stringify({\n  parent: { database_id: 'PASTE_YOUR_NOTION_DATABASE_ID_HERE' },\n  properties: {\n    Name:               { title: [{ text: { content: $json.title } }] },\n    Topic:              { rich_text: [{ text: { content: $json.topic } }] },\n    Status:             { select: { name: 'Draft' } },\n    'Meta Description': { rich_text: [{ text: { content: $json.meta_description } }] },\n    Tags:               { multi_select: $json.tags.map(t => ({ name: t })) }\n  },\n  children: $json.blocks\n}) }}",
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000008",
+      "id": "3ac037ff-94d7-483e-8d09-6a51d4ec1625",
       "name": "Create Notion Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1320, 0]
+      "position": [
+        1136,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "09bebdfa-7107-4f7a-86c5-fc003c0409cc",
+              "name": "topic",
+              "value": "={{ $('Markdown To Notion Blocks').first().json.topic }}",
+              "type": "string"
+            },
+            {
+              "id": "b9fccb58-e8f9-4a5c-b3ec-f543e1fb6fa9",
+              "name": "status",
+              "value": "done",
+              "type": "string"
+            },
+            {
+              "id": "81480192-da4e-4786-8b86-34a93b9531c4",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "6604dcaf-2f6d-4476-b990-c05a74947e52",
+      "name": "Prepare Sheet Update"
     },
     {
       "parameters": {
@@ -164,8 +227,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
-          "mode": "id"
+          "value": 1107022495,
+          "mode": "list",
+          "cachedResultName": "Untitled",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-p5W-cZpFf6SAq3mmH10pFZkcug1K9vJ1Cjo0p2f3Vw/edit#gid=1107022495"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -174,59 +239,180 @@
             "status": "done",
             "url": "={{ $json.url }}"
           },
-          "matchingColumns": ["topic"]
+          "matchingColumns": [
+            "topic"
+          ],
+          "schema": [
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_added",
+              "displayName": "date_added",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
-      "id": "a1000000-0000-4000-8000-000000000009",
+      "id": "b361b489-a862-4869-946a-6963a8296291",
       "name": "Update Sheet Row",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1540, 0]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "PASTE_YOUR_SLACK_WEBHOOK_URL_HERE",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  text: '📝 Draft ready: ' + $('Markdown To Notion Blocks').first().json.title + '\\n' + $('Create Notion Page').first().json.url\n}) }}",
-        "options": {}
-      },
-      "id": "a1000000-0000-4000-8000-000000000010",
-      "name": "Notify Slack",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1760, 0]
+      "position": [
+        1584,
+        224
+      ]
     }
   ],
   "connections": {
     "Google Sheets Trigger": {
-      "main": [[{ "node": "Firecrawl Search", "type": "main", "index": 0 }]]
-    },
-    "Firecrawl Search": {
-      "main": [[{ "node": "Flatten Competitors", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Firecrawl Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Flatten Competitors": {
-      "main": [[{ "node": "Claude Gap Analysis", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Claude Gap Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl Search": {
+      "main": [
+        [
+          {
+            "node": "Flatten Competitors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Claude Gap Analysis": {
-      "main": [[{ "node": "Parse Gap Analysis", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Parse Gap Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parse Gap Analysis": {
-      "main": [[{ "node": "Claude Write Article", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Claude Write Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Claude Write Article": {
-      "main": [[{ "node": "Markdown To Notion Blocks", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Markdown To Notion Blocks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Markdown To Notion Blocks": {
-      "main": [[{ "node": "Create Notion Page", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Create Notion Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Create Notion Page": {
-      "main": [[{ "node": "Update Sheet Row", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Update Sheet Row": {
-      "main": [[{ "node": "Notify Slack", "type": "main", "index": 0 }]]
+      "main": [
+        []
+      ]
+    },
+    "Prepare Sheet Update": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
