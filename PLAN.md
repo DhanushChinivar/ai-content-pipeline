@@ -68,14 +68,25 @@ Pick "Row Added" unless you have a specific reason not to, and treat `status` as
 ## Phase 2 — Research (Firecrawl)
 
 - [ ] Add an **HTTP Request** node after the trigger
-- [ ] `POST https://api.firecrawl.dev/v1/search`
+- [ ] `POST https://api.firecrawl.dev/v2/search`
 - [ ] Header auth: `Authorization: Bearer <FIRECRAWL_API_KEY>` (store as an n8n Header Auth credential, not inline)
-- [ ] Body: the topic as the query, limit 5, request markdown in the scrape options
-- [ ] Run it. Inspect the output: you want 5 results, each with a title, URL, and a body of markdown.
+- [ ] Body:
 
-⚠️ Verify the exact request/response shape against Firecrawl's current API docs before wiring it up — their endpoint versions move faster than tutorials do.
+```json
+{
+  "query": "{{ $json.topic }}",
+  "limit": 5,
+  "scrapeOptions": { "formats": [{ "type": "markdown" }] }
+}
+```
 
-- [ ] Add a **Code** node that flattens the 5 results into one string: `## <title> (<url>)\n<markdown>` per competitor
+- [ ] Run it. Inspect the output: 5 results under `data.web`, each with `title`, `url`, and `markdown`.
+
+⚠️ **v2, not v1** — verified against Firecrawl's docs 2026-08-14. Their endpoint versions move faster than tutorials do; re-check if you get a 404.
+
+⚠️ Without `scrapeOptions`, `markdown` comes back `null` — you get search results but no article text, and the gap analysis has nothing to read.
+
+- [ ] Add a **Code** node that flattens `data.web` into one string: `## <title> (<url>)\n<markdown>` per competitor
 - [ ] Truncate each competitor's markdown (~4,000 characters is plenty) so one bloated page can't blow up the next step's input
 
 **Why truncate:** you're paying per input token on the next two nodes, and the gap analysis needs *structure and coverage*, not every word.
