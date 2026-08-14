@@ -26,8 +26,15 @@ fast-paced world", no "it's important to note that", no section that only
 restates the section above it, no closing paragraph that summarises what the
 reader just read.
 
-Output HTML for the body, not markdown. Use <h2>, <h3>, <p>, <ul>/<li>,
-<strong>. No <html>, <head>, <body>, or <h1> — the CMS supplies the title.
+Output the body as Markdown, using only these four constructs:
+  ## Section heading
+  ### Subsection heading
+  - Bullet point
+  Plain paragraph text
+
+No H1 (the page title is supplied separately), no tables, no code blocks, no
+images, no links, no bold or italic markers. Separate every block with a blank
+line.
 ```
 
 ## User message template
@@ -61,13 +68,13 @@ Write the article. Target roughly 1,200 words.
       "type": "string",
       "description": "SEO meta description. 140-160 characters. Should make someone click."
     },
-    "body_html": {
+    "body_markdown": {
       "type": "string",
-      "description": "The full article body as HTML. No <h1>."
+      "description": "The full article body as Markdown, using only ##, ###, - and plain paragraphs. No H1."
     },
     "tags": {
       "type": "array",
-      "description": "3-6 WordPress tags.",
+      "description": "3-6 tags for the Notion Tags multi-select.",
       "items": { "type": "string" }
     },
     "gaps_addressed": {
@@ -78,7 +85,7 @@ Write the article. Target roughly 1,200 words.
   },
   "required": [
     "title", "meta_title", "meta_description",
-    "body_html", "tags", "gaps_addressed"
+    "body_markdown", "tags", "gaps_addressed"
   ],
   "additionalProperties": false
 }
@@ -89,7 +96,7 @@ Write the article. Target roughly 1,200 words.
 ## Notes
 
 - **`gaps_addressed` is your quality check.** Compare it against the `gaps` array from prompt 1. If they don't line up, the writing step ignored the research step — and the whole premise of the pipeline is that it doesn't.
-- **`body_html` not markdown:** WordPress takes HTML directly. Asking for markdown means adding a conversion node and debugging its edge cases.
+- **The four-construct restriction is deliberate.** Notion's API takes neither HTML nor markdown — it takes typed block objects, so a conversion node sits between this prompt and Notion either way. Constraining the model to `##`, `###`, `-`, and paragraphs means that converter stays ~15 lines instead of becoming a markdown parser. If you later need tables or code blocks, widen the prompt *and* the converter together.
 - **The "no fabricated facts" instruction is load-bearing**, not boilerplate. A confidently invented price or statistic on a client blog is the failure mode that gets a pipeline like this shut down. Consider it a candidate for a downstream check.
 - `max_tokens` is 16000 because thinking shares the budget with a ~1,200-word HTML body on `claude-opus-5`.
 
@@ -98,3 +105,4 @@ Write the article. Target roughly 1,200 words.
 | Date | Change |
 |---|---|
 | 2026-08-14 | Initial version |
+| 2026-08-14 | Switched `body_html` → `body_markdown`; publishing target moved from WordPress to Notion |
