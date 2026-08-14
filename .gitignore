@@ -1,0 +1,16 @@
+.env
+.env.local
+*.local
+
+# n8n exports can contain credential IDs and, if exported carelessly, secrets.
+# Scrub before committing anything from here.
+workflows/*-private.json
+workflows/*-raw.json
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+node_modules/
+*.log
