@@ -245,7 +245,44 @@ Pinned data is easy to miss: n8n greys out the node's parameters and puts a smal
 
 ⚠️ **Only map the columns you intend to overwrite.** n8n pre-fills *every* column in "Values to Update", so `date_added` (blank) and `row_number` (`0`) were both mapped and would have wiped those cells on every run. Delete the rows you don't want written.
 
-## ~~Node 10 — HTTP Request: Slack webhook~~ — cut 2026-08-14
+## Node 10 — Google Sheets: mark row failed
+
+The error branch. Without it a failed run leaves the row on `pending`, which is indistinguishable from a row the trigger hasn't reached yet — nothing retries it and nothing says so.
+
+Every node that can fail mid-run has **Settings → On Error → Continue (using error output)**, and its second (Error) output goes to a single `Mark Row Failed` node:
+
+`Firecrawl Search` · `Flatten Competitors` · `Claude Gap Analysis` · `Parse Gap Analysis` · `Claude Write Article` · `Markdown To Notion Blocks` · `Create Notion Page` · `Prepare Sheet Update`
+
+Same Google Sheets update as Node 9 — match on `topic`, but writing only `status` = `failed`:
+
+| Field | Value |
+|---|---|
+| Column to match on | `topic` |
+| `topic` | `{{ $('Google Sheets Trigger').first().json.topic }}` |
+| `status` | `failed` |
+| Execute Once | on |
+
+⚠️ **Read the topic from the trigger, not from `$json`.** The item arriving on an error branch is n8n's error object; it carries no sheet data. `$json.topic` would be `undefined`, the match would hit nothing, and the failure would go unrecorded — the same silent no-op documented under Node 9.
+
+**Execute Once** is on because one run only ever concerns one row, however many nodes route here.
+
+⚠️ **`Update Sheet Row` deliberately has no error branch.** If the sheet write itself fails, marking the row failed uses the same credential against the same sheet and would fail identically. A failure there shows up in the executions list.
+
+⚠️ **Never switch either sheet node to "Append or Update".** On a failed match it appends, the `rowAdded` trigger sees a new row, and the pipeline feeds itself.
+
+### Testing the error branch without spending anything
+
+Open the trigger → OUTPUT → **set mock data**, put in one row that exists in the sheet, then run only `Mark Row Failed` via its ▶ button. The row should flip to `failed` and the node should report **1 item** — "no output data" here means it matched nothing, not that it succeeded quietly.
+
+⚠️ **Mock data is pinned data, and clicking Save in that dialog persists it to the workflow.** It survives a page reload. Unpin (select the trigger, press `p`) and save again the moment you're done, or you have recreated the exact bug documented under Node 9.
+
+Note that running one node also runs its upstream dependencies, so this costs one Firecrawl search.
+
+### Setting On Error in the UI
+
+The dropdown is easy to get wrong. Its first arrow-key press only focuses the list, so from a closed dropdown it takes **three** Down presses to reach the third option, and clicking the option text directly tends to select the one above. Set it, then re-read the field to confirm it says `Continue (using error output)` and not `Continue` — the latter passes the error downstream as if it were a normal item, which is worse than no handling at all.
+
+## ~~Node 11 — HTTP Request: Slack webhook~~ — cut 2026-08-14
 
 Removed from the workflow. It only announced a draft that the Notion database and the sheet's `url` column already record. See Phase 7 in [`../PLAN.md`](../PLAN.md) for the reasoning and the condition under which it would be worth adding back.
 

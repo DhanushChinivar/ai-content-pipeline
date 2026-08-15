@@ -8,7 +8,7 @@ Legend: `[ ]` todo · `[x]` done · 🧠 = a decision to make, not a task to do
 
 ## Where the build actually is (2026-08-14)
 
-Live workflow: n8n Cloud instance `dash280`, workflow **AI Content Pipeline** — 10 nodes on the canvas and connected, **published** as `v1 live trigger`. The Google Sheets trigger polls every minute for added rows. (Slack was cut; see Phase 7.)
+Live workflow: n8n Cloud instance `dash280`, workflow **AI Content Pipeline** — 11 nodes on the canvas and connected, **published** as `v2 failed status`. The Google Sheets trigger polls every minute for added rows. (Slack was cut; see Phase 7.)
 
 Note that `rowAdded` only fires for rows added *after* the workflow was published. Rows already sitting at `pending` are invisible to it — to reprocess one, delete it and paste it back.
 
@@ -234,8 +234,8 @@ Worth revisiting only if this ever runs at volume, and then in a smarter shape t
 
 ## Phase 8 — Make it survive contact with reality
 
-- [ ] Set `status = failed` on error instead of leaving the row stuck on `pending`
-- [ ] Add an **Error Trigger** workflow so failures surface somewhere — a silent failure is worse than a loud one. With Slack cut, the cheapest signal is setting `status = failed` on the row (above) and checking the n8n executions list.
+- [x] Set `status = failed` on error instead of leaving the row stuck on `pending` — **done 2026-08-15.** All 8 fallible nodes use `On Error → Continue (using error output)`, with every error output routed to one `Mark Row Failed` node. See Node 10 in `workflows/node-configs.md`.
+- [x] Add an **Error Trigger** workflow so failures surface somewhere — **solved differently, and deliberately.** n8n's Error Trigger only receives the execution's *metadata* (id, url, error message, last node), never the item data, so it cannot tell you which topic failed without a second API call. The in-workflow error branch above can, because it reads the topic from the trigger node. The row saying `failed` is the signal; the executions list says why.
 - [ ] Handle Firecrawl returning fewer than 5 results (thin niches, obscure queries)
 - [ ] Add a retry with backoff on the two Anthropic calls (429s happen)
 - [ ] Handle articles that convert to more than 100 blocks — either truncate, or append the remainder with `PATCH /v1/blocks/<page_id>/children`

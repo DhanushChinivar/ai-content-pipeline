@@ -54,7 +54,8 @@
         0
       ],
       "id": "3f88cb08-7788-4eb2-b430-635f7d8ea2d6",
-      "name": "Firecrawl Search"
+      "name": "Firecrawl Search",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -67,7 +68,8 @@
         0
       ],
       "id": "ebfb22fd-ae43-4a79-ad1d-2f72ce46dc43",
-      "name": "Flatten Competitors"
+      "name": "Flatten Competitors",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -96,7 +98,8 @@
       "position": [
         256,
         224
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -109,7 +112,8 @@
       "position": [
         480,
         224
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -138,7 +142,8 @@
       "position": [
         704,
         224
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -151,7 +156,8 @@
       "position": [
         928,
         224
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -180,7 +186,8 @@
       "position": [
         1136,
         224
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -215,7 +222,8 @@
         224
       ],
       "id": "6604dcaf-2f6d-4476-b990-c05a74947e52",
-      "name": "Prepare Sheet Update"
+      "name": "Prepare Sheet Update",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -307,6 +315,98 @@
         1584,
         224
       ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1-p5W-cZpFf6SAq3mmH10pFZkcug1K9vJ1Cjo0p2f3Vw",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1107022495,
+          "mode": "list",
+          "cachedResultName": "Untitled",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-p5W-cZpFf6SAq3mmH10pFZkcug1K9vJ1Cjo0p2f3Vw/edit#gid=1107022495"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "topic": "={{ $('Google Sheets Trigger').first().json.topic }}",
+            "status": "failed"
+          },
+          "matchingColumns": [
+            "topic"
+          ],
+          "schema": [
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "date_added",
+              "displayName": "date_added",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        288,
+        432
+      ],
+      "id": "06919006-7d02-4c8d-a5f0-abd9f6be3a6c",
+      "name": "Mark Row Failed",
+      "executeOnce": true
     }
   ],
   "connections": {
@@ -329,6 +429,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -337,6 +444,13 @@
         [
           {
             "node": "Flatten Competitors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
             "type": "main",
             "index": 0
           }
@@ -351,6 +465,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -359,6 +480,13 @@
         [
           {
             "node": "Claude Write Article",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
             "type": "main",
             "index": 0
           }
@@ -373,6 +501,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -384,6 +519,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -392,6 +534,13 @@
         [
           {
             "node": "Prepare Sheet Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
             "type": "main",
             "index": 0
           }
@@ -408,6 +557,13 @@
         [
           {
             "node": "Update Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Row Failed",
             "type": "main",
             "index": 0
           }
