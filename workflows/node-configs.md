@@ -71,6 +71,24 @@ Cuts ~139,000 chars to ~16,000 — roughly $0.18 → $0.02 of input tokens per r
 
 Output: `{ topic, competitor_count, competitor_markdown }`
 
+### The two guards at the top
+
+⚠️ **A Firecrawl error arrives on this node's normal input, not on the previous node's error output.** `Firecrawl Search` has `On Error → Continue (using error output)`, but a 429 still came down the **success** branch as an ordinary item — verified on execution #20: *Success Branch (1 item)*, *Error Branch* empty. So the error object reaches this node as `$json`, and the old first line (`$input.first().json.data.web`) blew up with:
+
+```
+Cannot read properties of undefined (reading 'web')
+```
+
+which names the parsing rather than Firecrawl. The guard now checks `res.error || res.success === false` first and throws the real message, digging the useful text out of `body.error` → `details.description` → `error.message`. A real one, from 2026-08-16:
+
+```
+Firecrawl request failed (429): You've hit Firecrawl's keyless free tier rate limit... Retry in ~13h.
+```
+
+The second guard throws when no result has `markdown`. An empty competitor set is not an error to Firecrawl, but it leaves the gap analysis with nothing to read and Claude will cheerfully write an article from an empty brief.
+
+**The general lesson:** an upstream node's error output being wired does not guarantee errors travel that way. Any node that consumes an HTTP response should check the payload shape before indexing into it.
+
 ---
 
 ## Node 4 — HTTP Request: Claude gap analysis

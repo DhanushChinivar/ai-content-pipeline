@@ -8,7 +8,7 @@ Legend: `[ ]` todo · `[x]` done · 🧠 = a decision to make, not a task to do
 
 ## Where the build actually is (2026-08-14)
 
-Live workflow: n8n Cloud instance `dash280`, workflow **AI Content Pipeline** — 11 nodes on the canvas and connected, **published** as `v2 failed status`. The Google Sheets trigger polls every minute for added rows. (Slack was cut; see Phase 7.)
+Live workflow: n8n Cloud instance `dash280`, workflow **AI Content Pipeline** — 11 nodes on the canvas and connected, **published** as `v3 firecrawl guard`. The Google Sheets trigger polls every minute for added rows. (Slack was cut; see Phase 7.)
 
 Note that `rowAdded` only fires for rows added *after* the workflow was published. Rows already sitting at `pending` are invisible to it — to reprocess one, delete it and paste it back.
 
@@ -17,6 +17,12 @@ Note that `rowAdded` only fires for rows added *after* the workflow was publishe
 The gap analysis output is genuinely evidence-based, not filler — it names the ranking sites, their actual prices, and a date/price-band mismatch on one of them. That was the open question in Phase 3, and the answer is yes.
 
 What remains is hardening (Phase 8) and polish (Phase 9), not correctness.
+
+### Observed in production on 2026-08-16
+
+- **Firecrawl 429, `reason: "credits"`, `retry_after_seconds: 45846`** (~13h) on `best coffe shops in Sydney`. The error branch caught it and the row was marked `failed` — the first time the safety net earned its keep, one day after being added.
+- **But it was caught one node late.** The 429 came out of `Firecrawl Search`'s *success* branch despite that node having an error output wired, so `Flatten Competitors` failed on the shape instead, recording a misleading `Cannot read properties of undefined (reading 'web')`. Guarded in v3.
+- **The Google Sheets trigger failed every minute for over an hour** with `500 Internal error encountered` / `status: INTERNAL` from Google's API. Nothing in the workflow can catch this: the trigger is upstream of every node, so no row gets marked and the run never starts. The only signal is the executions list. This is the strongest argument for the Phase 8 error-notification item that remains open.
 
 ### Fixed on 2026-08-14
 
@@ -236,7 +242,7 @@ Worth revisiting only if this ever runs at volume, and then in a smarter shape t
 
 - [x] Set `status = failed` on error instead of leaving the row stuck on `pending` — **done 2026-08-15.** All 8 fallible nodes use `On Error → Continue (using error output)`, with every error output routed to one `Mark Row Failed` node. See Node 10 in `workflows/node-configs.md`.
 - [x] Add an **Error Trigger** workflow so failures surface somewhere — **solved differently, and deliberately.** n8n's Error Trigger only receives the execution's *metadata* (id, url, error message, last node), never the item data, so it cannot tell you which topic failed without a second API call. The in-workflow error branch above can, because it reads the topic from the trigger node. The row saying `failed` is the signal; the executions list says why.
-- [ ] Handle Firecrawl returning fewer than 5 results (thin niches, obscure queries)
+- [x] Handle Firecrawl returning fewer than 5 results (thin niches, obscure queries) — `Flatten Competitors` throws when no result carries `markdown`, and separately when Firecrawl returns an error item at all. See Node 3 in `workflows/node-configs.md`.
 - [ ] Add a retry with backoff on the two Anthropic calls (429s happen)
 - [ ] Handle articles that convert to more than 100 blocks — either truncate, or append the remainder with `PATCH /v1/blocks/<page_id>/children`
 - [ ] Cap it: don't process more than N rows per run, so one bad paste into the sheet can't fire 200 API calls
